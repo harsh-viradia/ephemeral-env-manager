@@ -13,7 +13,6 @@ Used for QA and feature environments with GitLab pipeline integration.
 - Works in-cluster and locally
 - Health endpoint
 
-
 ---
 
 ## Environment Variables
