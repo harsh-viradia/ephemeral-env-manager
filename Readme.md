@@ -19,13 +19,9 @@ Used for QA and feature environments with GitLab pipeline integration.
 
 .
 ├── app/
-
 │   └── main.py
-
 ├── Dockerfile
-
 ├── requirements.txt
-
 └── README.md
 
 ---
