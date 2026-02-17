@@ -13,16 +13,6 @@ Used for QA and feature environments with GitLab pipeline integration.
 - Works in-cluster and locally
 - Health endpoint
 
----
-
-## Project Structure
-
-.
-├── app/
-│   └── main.py
-├── Dockerfile
-├── requirements.txt
-└── README.md
 
 ---
 
