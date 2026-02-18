@@ -214,6 +214,55 @@ def list_ephemeral(token: str = Depends(get_bearer_token)):
         host=socket.gethostname(),
     )
 
+@app.post("/create", response_model=ActionResponse)
+def create_ephemeral(
+    req: CreateRequest,
+    token: str = Depends(get_bearer_token),
+):
+    authenticate(req.EPH_OWNER, token)
+
+    api = load_kube_client()
+    namespaces = api.list_namespace().items
+
+    owner_envs = [
+        ns.metadata.name
+        for ns in namespaces
+        if ns.metadata.labels
+        and ns.metadata.labels.get("ephemeral.owner") == req.EPH_OWNER
+    ]
+
+    if len(owner_envs) >= MAX_ENV_PER_OWNER:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Owner '{req.EPH_OWNER}' already has {MAX_ENV_PER_OWNER} environments",
+        )
+
+    eph_ns = validate_namespace(req.EPH_NAMESPACE)
+
+    fe_branch = "staging" if req.TARGET_FRONTEND_BRANCH == "default" else req.TARGET_FRONTEND_BRANCH
+    be_branch = "staging" if req.TARGET_BACKEND_BRANCH == "default" else req.TARGET_BACKEND_BRANCH
+
+    validate_branch(fe_branch)
+    validate_branch(be_branch)
+
+    pipeline_url = trigger_gitlab_pipeline(
+        {
+            "FB_DEPLOY_ACTION": "apply",
+            "EPH_NAMESPACE": eph_ns,
+            "TARGET_FRONTEND_BRANCH": fe_branch,
+            "TARGET_BACKEND_BRANCH": be_branch,
+            "EPH_OWNER": req.EPH_OWNER,
+        }
+    )
+
+    return ActionResponse(
+        status="success",
+        message=f"Environment created by {req.EPH_OWNER}",
+        gitlab_pipeline_url=pipeline_url,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+
 
 @app.get("/healthz")
 def healthz():
