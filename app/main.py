@@ -131,6 +131,18 @@ class ListResponse(BaseModel):
     host: str
 
 
+class CreateRequest(BaseModel):
+    TARGET_FRONTEND_BRANCH: str
+    TARGET_BACKEND_BRANCH: str
+    EPH_NAMESPACE: str
+    EPH_OWNER: str
+
+
+class DeleteRequest(BaseModel):
+    EPH_NAMESPACE: List[str]
+    EPH_OWNER: str
+
+
 class ActionResponse(BaseModel):
     status: str
     message: str
@@ -214,6 +226,7 @@ def list_ephemeral(token: str = Depends(get_bearer_token)):
         host=socket.gethostname(),
     )
 
+
 @app.post("/create", response_model=ActionResponse)
 def create_ephemeral(
     req: CreateRequest,
@@ -262,6 +275,7 @@ def create_ephemeral(
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
+
 @app.post("/delete")
 def delete_ephemeral(
     req: DeleteRequest,
@@ -296,6 +310,7 @@ def delete_ephemeral(
         "results": results,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
 
 @app.get("/healthz")
 def healthz():
