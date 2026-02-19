@@ -262,7 +262,40 @@ def create_ephemeral(
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
+@app.post("/delete")
+def delete_ephemeral(
+    req: DeleteRequest,
+    token: str = Depends(get_bearer_token),
+):
+    authenticate(req.EPH_OWNER, token)
 
+    results = []
+
+    for ns in req.EPH_NAMESPACE:
+        eph_ns = validate_namespace(ns)
+
+        pipeline_url = trigger_gitlab_pipeline(
+            {
+                "FB_DEPLOY_ACTION": "destroy",
+                "EPH_NAMESPACE": eph_ns,
+                "EPH_OWNER": req.EPH_OWNER,
+            }
+        )
+
+        results.append(
+            {
+                "namespace": eph_ns,
+                "pipeline_url": pipeline_url,
+                "message": f"Deleted by {req.EPH_OWNER}",
+            }
+        )
+
+    return {
+        "status": "success",
+        "count": len(results),
+        "results": results,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 @app.get("/healthz")
 def healthz():
